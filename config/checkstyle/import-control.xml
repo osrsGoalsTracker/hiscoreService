@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!DOCTYPE import-control PUBLIC
+    "-//Checkstyle//DTD ImportControl Configuration 1.4//EN"
+    "https://checkstyle.org/dtds/import_control_1_4.dtd">
+
+<import-control pkg="com.osrsGoalTracker">
+    <!-- Allow all external dependencies -->
+    <allow pkg="com.google"/>
+    <allow pkg="lombok"/>
+    <allow pkg="org"/>
+    <allow pkg="javax"/>
+    <allow pkg="java"/>
+    <allow pkg="com.amazonaws"/>
+    <allow pkg="software.amazon"/>
+    <allow pkg="com.fasterxml"/>
+    <allow pkg="com.osrsGoalTracker"/>
+    <allow pkg="com.osrshiscores"/>
+
+    <!-- hiscore Domain -->
+    <subpackage name="hiscore">
+        <!-- Handler Layer -->
+        <subpackage name="handler">
+            <allow pkg="com.osrsGoalTracker.hiscore.handler"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.service"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.model"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.di"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.repository"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.external"/>
+        </subpackage>
+
+        <!-- Service Layer -->
+        <subpackage name="service">
+            <allow pkg="com.osrsGoalTracker.hiscore.service"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.repository"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.model"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.external"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.handler"/>
+        </subpackage>
+
+        <!-- Repository Layer -->
+        <subpackage name="repository">
+            <allow pkg="com.osrsGoalTracker.hiscore.repository"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.model"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.handler"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.service"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.external"/>
+        </subpackage>
+
+        <!-- Model Layer -->
+        <subpackage name="model">
+            <allow pkg="com.osrsGoalTracker.hiscore.model"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.handler"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.service"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.repository"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.external"/>
+        </subpackage>
+
+        <!-- External Layer -->
+        <subpackage name="external">
+            <allow pkg="com.osrsGoalTracker.hiscore.external"/>
+            <allow pkg="com.osrsGoalTracker.hiscore.model"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.handler"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.service"/>
+            <disallow pkg="com.osrsGoalTracker.hiscore.repository"/>
+        </subpackage>
+
+        <!-- DI Layer -->
+        <subpackage name="di">
+            <allow pkg="com.osrsGoalTracker.hiscore"/>
+        </subpackage>
+    </subpackage>
+</import-control> 
