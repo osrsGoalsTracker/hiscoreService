@@ -26,6 +26,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Debug OIDC claims
+        run: |
+          echo "GitHub repository: ${{ github.repository }}"
+          echo "GitHub ref: ${{ github.ref }}"
+          echo "GitHub actor: ${{ github.actor }}"
+          echo "GitHub event name: ${{ github.event_name }}"
+          echo "GitHub token audience: sts.amazonaws.com"
+          echo "GitHub token subject format: repo:${{ github.repository }}:ref:${{ github.ref }}"
+
+      - name: Debug AWS role
+        run: |
+          echo "Role to assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}"
+          echo "AWS region: ${{ vars.AWS_REGION }}"
+
       - name: Determine version
         id: determine_version
         run: |
