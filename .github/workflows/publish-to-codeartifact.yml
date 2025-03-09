@@ -1,0 +1,75 @@
+name: Publish to AWS CodeArtifact
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Determine version
+        id: determine_version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # If this is a tag push, use the tag name without the 'v' prefix
+            VERSION=$(echo ${{ github.ref }} | sed 's|refs/tags/v||')
+          else
+            # For non-tag pushes, use the short commit hash
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            VERSION="0.0.0-${SHORT_SHA}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "Determined version: ${VERSION}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Get CodeArtifact token
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+            --domain-owner ${{ vars.AWS_ACCOUNT_ID }} \
+            --query authorizationToken \
+            --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}" >> $GITHUB_ENV
+          
+          CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint \
+            --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+            --repository ${{ vars.CODEARTIFACT_REPOSITORY }} \
+            --format maven \
+            --query repositoryEndpoint \
+            --output text)
+          echo "CODEARTIFACT_REPOSITORY_URL=${CODEARTIFACT_REPOSITORY_URL}" >> $GITHUB_ENV
+
+      - name: Build with Gradle
+        run: |
+          ./gradlew clean build -Pversion=${VERSION}
+
+      - name: Publish to AWS CodeArtifact
+        run: |
+          ./gradlew publishAllToCodeArtifact -Pversion=${VERSION}
+        env:
+          CODEARTIFACT_AUTH_TOKEN: ${{ env.CODEARTIFACT_AUTH_TOKEN }}
+          CODEARTIFACT_REPOSITORY_URL: ${{ env.CODEARTIFACT_REPOSITORY_URL }}

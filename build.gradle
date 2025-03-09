@@ -3,10 +3,12 @@ plugins {
     id 'io.freefair.lombok' version '8.4'
     id 'checkstyle'
     id 'jvm-test-suite'
+    id 'maven-publish'  // Add maven-publish plugin for publishing to CodeArtifact
 }
 
 group = 'com.osrsGoalTracker'
-version = '1.0-SNAPSHOT'
+// Use project property for version if provided, otherwise use default
+version = project.hasProperty('version') ? project.getProperty('version') : '1.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -15,12 +17,27 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+    
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
     mavenCentral()
     mavenLocal()  // Check local Maven repository first
     maven { url 'https://jitpack.io' }
+    
+    // Add CodeArtifact repository if credentials are available
+    if (System.getenv('CODEARTIFACT_REPOSITORY_URL') != null) {
+        maven {
+            name = "CodeArtifact"
+            url = System.getenv('CODEARTIFACT_REPOSITORY_URL')
+            credentials {
+                username = "aws"
+                password = System.getenv('CODEARTIFACT_AUTH_TOKEN')
+            }
+        }
+    }
 }
 
 configurations {
@@ -211,9 +228,10 @@ task checkGitHooks {
 // Lambda handler configurations
 def lambdaHandlers = [
     'getCharacterHiscores': [
-        handler: 'com.osrsGoalTracker.hiscore.handler.GetCharacterHiscores',
+        handler: 'com.osrsGoalTracker.hiscore.handler.GetCharacterHiscoresHandler',
         description: 'Handler for retrieving player statistics from OSRS hiscores'
     ]
+    // New handlers will be automatically detected and published
 ]
 
 // Create tasks for each Lambda handler
@@ -249,6 +267,101 @@ task buildAllHandlers {
     dependsOn handlerTasks
 }
 
-// Make build task depend on checkGitHooks and buildAllHandlers
-build.finalizedBy buildAllHandlers
-build.dependsOn checkGitHooks
+// Service JAR task
+task serviceJar(type: Jar) {
+    archiveBaseName = "hiscore-service"
+    archiveVersion = project.version
+    archiveClassifier = null
+    
+    from sourceSets.main.output
+    exclude '**/handler/**'  // Exclude handlers from the service JAR
+}
+
+// Configure publishing for the service JAR
+publishing {
+    publications {
+        // Service JAR publication
+        hiscoreService(MavenPublication) {
+            artifactId = 'hiscore-service'
+            from components.java
+            
+            // Exclude handlers from the service JAR
+            pom.withXml {
+                def root = asNode()
+                root.dependencies.'*'.findAll { it.artifactId.text().contains('-lambda') }.each {
+                    it.parent().remove(it)
+                }
+            }
+        }
+        
+        // Create publications for each Lambda handler
+        lambdaHandlers.each { name, config ->
+            "${name}"(MavenPublication) {
+                artifactId = "${name}-lambda"
+                artifact tasks.named("${name}Lambda").get()
+                
+                pom {
+                    name = "${name}-lambda"
+                    description = config.description
+                }
+            }
+        }
+    }
+    
+    repositories {
+        // Configure CodeArtifact repository for publishing
+        if (System.getenv('CODEARTIFACT_REPOSITORY_URL') != null) {
+            maven {
+                name = 'CodeArtifact'
+                url = System.getenv('CODEARTIFACT_REPOSITORY_URL')
+                credentials {
+                    username = "aws"
+                    password = System.getenv('CODEARTIFACT_AUTH_TOKEN')
+                }
+            }
+        }
+    }
+}
+
+// Task to publish all artifacts to CodeArtifact
+task publishAllToCodeArtifact {
+    description = 'Publishes all artifacts to AWS CodeArtifact'
+    group = 'publishing'
+    
+    // Depend on all publish tasks
+    dependsOn tasks.withType(PublishToMavenRepository).matching { 
+        it.repository == publishing.repositories.findByName('CodeArtifact') 
+    }
+}
+
+// Automatically detect new handlers in the handler package
+task detectHandlers {
+    description = 'Detects new handlers in the handler package'
+    group = 'build'
+    
+    doLast {
+        def handlerDir = new File("${projectDir}/src/main/java/com/osrsGoalTracker/hiscore/handler")
+        if (handlerDir.exists()) {
+            handlerDir.eachFile { file ->
+                if (file.name.endsWith('Handler.java')) {
+                    def handlerName = file.name.replace('Handler.java', '')
+                    def camelCaseName = handlerName[0].toLowerCase() + handlerName.substring(1)
+                    
+                    if (!lambdaHandlers.containsKey(camelCaseName)) {
+                        println "Detected new handler: ${handlerName}"
+                        lambdaHandlers[camelCaseName] = [
+                            handler: "com.osrsGoalTracker.hiscore.handler.${handlerName}",
+                            description: "Handler for ${camelCaseName}"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Make sure detectHandlers runs before buildAllHandlers
+buildAllHandlers.dependsOn detectHandlers
+
+// Make sure the build task depends on buildAllHandlers and serviceJar
+build.dependsOn buildAllHandlers, serviceJar
