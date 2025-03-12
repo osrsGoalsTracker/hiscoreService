@@ -64,6 +64,76 @@ Each handler will be built into its own JAR file in `build/libs/`.
 
 This project is configured to automatically publish artifacts to AWS CodeArtifact when changes are pushed to the main branch or when a new version tag is created.
 
+### GitHub Action for CodeArtifact Publishing
+
+The project includes a GitHub Action workflow that automatically builds and publishes artifacts to AWS CodeArtifact. The workflow can be triggered in three ways:
+
+1. **Push to main branch**: Automatically builds and publishes with a timestamp-based version
+2. **Pull request to main branch**: Builds but doesn't publish (validation only)
+3. **Manual trigger**: Can be manually triggered with a specific version number
+
+#### Required GitHub Secrets
+
+This workflow uses organization-level secrets to allow sharing credentials across multiple repositories. You need to set up the following secrets in your GitHub organization settings:
+
+- `OSRS_AWS_ACCESS_KEY_ID`: AWS access key with permissions to publish to CodeArtifact
+- `OSRS_AWS_SECRET_ACCESS_KEY`: Corresponding AWS secret key
+- `OSRS_AWS_REGION`: AWS region where your CodeArtifact repository is located
+- `OSRS_CODEARTIFACT_DOMAIN`: Your CodeArtifact domain name
+- `OSRS_CODEARTIFACT_DOMAIN_OWNER`: AWS account ID that owns the CodeArtifact domain
+- `OSRS_CODEARTIFACT_REPOSITORY`: Name of your CodeArtifact repository
+
+To set up organization secrets:
+
+1. Go to your GitHub organization's main page
+2. Click on "Settings" in the top navigation bar
+3. Select "Secrets and variables" from the left sidebar
+4. Click on "Actions"
+5. Click "New organization secret" to add each of the required secrets
+6. For each secret, you can control which repositories can access it by selecting specific repositories or allowing all repositories
+
+#### IAM Permissions Required
+
+The AWS user associated with the access key needs the following permissions:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "codeartifact:GetAuthorizationToken",
+                "codeartifact:GetRepositoryEndpoint",
+                "codeartifact:ReadFromRepository",
+                "codeartifact:PublishPackageVersion"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "sts:GetServiceBearerToken",
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "sts:AWSServiceName": "codeartifact.amazonaws.com"
+                }
+            }
+        }
+    ]
+}
+```
+
+#### Manual Workflow Trigger
+
+To manually trigger the workflow with a specific version:
+
+1. Go to the "Actions" tab in your GitHub repository
+2. Select the "Build and Publish to AWS CodeArtifact" workflow
+3. Click "Run workflow"
+4. Enter the desired version number (e.g., "1.0.0")
+5. Click "Run workflow"
+
 ### Published Artifacts
 
 The following artifacts are published to AWS CodeArtifact:
