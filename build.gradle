@@ -219,7 +219,7 @@ def lambdaHandlers = [
     // New handlers will be automatically detected and published
 ]
 
-// Create tasks for each Lambda handler
+// Create tasks for each Lambda handler (uber/fat jars with all dependencies)
 def handlerTasks = []
 lambdaHandlers.each { name, config ->
     def taskName = "${name}Lambda"
@@ -252,14 +252,28 @@ task buildAllHandlers {
     dependsOn handlerTasks
 }
 
-// Service JAR task
+// Service JAR task (uber/fat jar with all dependencies)
 task serviceJar(type: Jar) {
     archiveBaseName = "hiscore-service"
     archiveVersion = project.version
     archiveClassifier = null
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    manifest {
+        attributes(
+            'Implementation-Title': 'OSRS Hiscore Service',
+            'Implementation-Version': project.version
+        )
+    }
     
     from sourceSets.main.output
     exclude '**/handler/**'  // Exclude handlers from the service JAR
+    
+    // Include all dependencies to make it a fat/uber jar
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 // Configure publishing for the service JAR
