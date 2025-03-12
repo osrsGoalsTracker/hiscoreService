@@ -52,16 +52,6 @@ configurations {
     }
 }
 
-// Check if local goalTrackerDao exists
-def localOsrsHiscores = file('../osrs-hiscores')
-def useLocalOsrsHiscores = localOsrsHiscores.exists()
-
-if (useLocalOsrsHiscores) {
-    println "Using local localOsrsHiscores from ${localOsrsHiscores.absolutePath}"
-} else {
-    println "Local localOsrsHiscores not found at ${localOsrsHiscores.absolutePath}, using JitPack version"
-}
-
 dependencies {
     // AWS DynamoDB
     implementation platform('software.amazon.awssdk:bom:2.24.0')
@@ -101,12 +91,7 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 
     // Orchestration Service - Use local project if available, otherwise use JitPack
-    if (localOsrsHiscores) {
-        implementation files("${localOsrsHiscores}/build/libs/osrs-api-client-1.0-SNAPSHOT.jar")
-    } else {
-        // OSRS Hiscores
-        implementation 'com.github.osrsGoalsTracker:osrs-hiscores:v2.0.0'
-    }
+    implementation 'com.github.osrsGoalsTracker:osrs-hiscores:v2.0.0'
 }
 
 testing {
