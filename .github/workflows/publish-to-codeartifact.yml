@@ -80,7 +80,7 @@ jobs:
         CODEARTIFACT_REPOSITORY_URL: ${{ env.CODEARTIFACT_REPOSITORY_URL }}
         
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v2.3.1
+      uses: actions/upload-artifact@v4.6.1
       with:
         name: hiscore-service-artifacts
         path: |
