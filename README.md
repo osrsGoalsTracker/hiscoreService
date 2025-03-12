@@ -76,12 +76,12 @@ The project includes a GitHub Action workflow that automatically builds and publ
 
 This workflow uses organization-level secrets to allow sharing credentials across multiple repositories. You need to set up the following secrets in your GitHub organization settings:
 
-- `OSRS_AWS_ACCESS_KEY_ID`: AWS access key with permissions to publish to CodeArtifact
-- `OSRS_AWS_SECRET_ACCESS_KEY`: Corresponding AWS secret key
-- `OSRS_AWS_REGION`: AWS region where your CodeArtifact repository is located
-- `OSRS_CODEARTIFACT_DOMAIN`: Your CodeArtifact domain name
-- `OSRS_CODEARTIFACT_DOMAIN_OWNER`: AWS account ID that owns the CodeArtifact domain
-- `OSRS_CODEARTIFACT_REPOSITORY`: Name of your CodeArtifact repository
+- `AWS_ACCESS_KEY_ID`: AWS access key with permissions to publish to CodeArtifact
+- `AWS_SECRET_ACCESS_KEY`: Corresponding AWS secret key
+- `AWS_REGION`: AWS region where your CodeArtifact repository is located
+- `CODEARTIFACT_DOMAIN`: Your CodeArtifact domain name
+- `CODEARTIFACT_DOMAIN_OWNER`: AWS account ID that owns the CodeArtifact domain
+- `CODEARTIFACT_REPOSITORY`: Name of your CodeArtifact repository
 
 To set up organization secrets:
 
