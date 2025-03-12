@@ -106,7 +106,14 @@ The AWS user associated with the access key needs the following permissions:
                 "codeartifact:GetAuthorizationToken",
                 "codeartifact:GetRepositoryEndpoint",
                 "codeartifact:ReadFromRepository",
-                "codeartifact:PublishPackageVersion"
+                "codeartifact:PublishPackageVersion",
+                "codeartifact:PutPackageMetadata",
+                "codeartifact:ListPackages",
+                "codeartifact:ListPackageVersions",
+                "codeartifact:DescribePackageVersion",
+                "codeartifact:DescribeRepository",
+                "codeartifact:GetPackageVersionAsset",
+                "codeartifact:GetPackageVersionReadme"
             ],
             "Resource": "*"
         },
