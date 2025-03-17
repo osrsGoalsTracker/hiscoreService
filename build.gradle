@@ -281,11 +281,11 @@ publishing {
     publications {
         // Service uberjar publication
         hiscoreServiceUberjar(MavenPublication) {
-            artifactId = 'hiscore-service-uberjar'
+            artifactId = 'hiscore-service'
             artifact tasks.named('serviceJar').get()
             
             pom {
-                name = 'hiscore-service-uberjar'
+                name = 'hiscore-service'
                 description = 'Uberjar containing all dependencies for the hiscore service'
             }
         }
@@ -293,11 +293,11 @@ publishing {
         // Create publications for each Lambda handler uberjar
         lambdaHandlers.each { name, config ->
             "${name}Uberjar"(MavenPublication) {
-                artifactId = "${name}-lambda-uberjar"
+                artifactId = "${name}-lambda"
                 artifact tasks.named("${name}Lambda").get()
                 
                 pom {
-                    name = "${name}-lambda-uberjar"
+                    name = "${name}-lambda"
                     description = config.description
                 }
             }
