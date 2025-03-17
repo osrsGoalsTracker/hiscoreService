@@ -290,10 +290,34 @@ publishing {
             }
         }
         
+        // Latest version publication for service
+        hiscoreServiceLatestUberjar(MavenPublication) {
+            artifactId = 'hiscore-service'
+            version = 'latest'
+            artifact tasks.named('serviceJar').get()
+            
+            pom {
+                name = 'hiscore-service'
+                description = 'Uberjar containing all dependencies for the hiscore service'
+            }
+        }
+        
         // Create publications for each Lambda handler uberjar
         lambdaHandlers.each { name, config ->
             "${name}Uberjar"(MavenPublication) {
                 artifactId = "${name}-lambda"
+                artifact tasks.named("${name}Lambda").get()
+                
+                pom {
+                    name = "${name}-lambda"
+                    description = config.description
+                }
+            }
+            
+            // Latest version publication for each handler
+            "${name}LatestUberjar"(MavenPublication) {
+                artifactId = "${name}-lambda"
+                version = 'latest'
                 artifact tasks.named("${name}Lambda").get()
                 
                 pom {
@@ -351,18 +375,6 @@ task publishLatest {
                 '--status', 'Latest'
         }
         
-        // Also publish a 'latest' version
-        exec {
-            commandLine 'aws', 'codeartifact', 'put-package-version-status',
-                '--domain', System.getenv('CODEARTIFACT_DOMAIN'),
-                '--domain-owner', System.getenv('CODEARTIFACT_DOMAIN_OWNER'),
-                '--repository', System.getenv('CODEARTIFACT_REPOSITORY'),
-                '--format', 'maven',
-                '--package', 'hiscore-service',
-                '--version', 'latest',
-                '--status', 'Latest'
-        }
-        
         // Publish latest tag for each lambda handler
         lambdaHandlers.each { name, config ->
             exec {
@@ -373,18 +385,6 @@ task publishLatest {
                     '--format', 'maven',
                     '--package', "${name}-lambda",
                     '--version', version,
-                    '--status', 'Latest'
-            }
-            
-            // Also publish a 'latest' version for each handler
-            exec {
-                commandLine 'aws', 'codeartifact', 'put-package-version-status',
-                    '--domain', System.getenv('CODEARTIFACT_DOMAIN'),
-                    '--domain-owner', System.getenv('CODEARTIFACT_DOMAIN_OWNER'),
-                    '--repository', System.getenv('CODEARTIFACT_REPOSITORY'),
-                    '--format', 'maven',
-                    '--package', "${name}-lambda",
-                    '--version', 'latest',
                     '--status', 'Latest'
             }
         }
