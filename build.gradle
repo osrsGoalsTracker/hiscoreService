@@ -351,6 +351,18 @@ task publishLatest {
                 '--status', 'Latest'
         }
         
+        // Also publish a 'latest' version
+        exec {
+            commandLine 'aws', 'codeartifact', 'put-package-version-status',
+                '--domain', System.getenv('CODEARTIFACT_DOMAIN'),
+                '--domain-owner', System.getenv('CODEARTIFACT_DOMAIN_OWNER'),
+                '--repository', System.getenv('CODEARTIFACT_REPOSITORY'),
+                '--format', 'maven',
+                '--package', 'hiscore-service',
+                '--version', 'latest',
+                '--status', 'Latest'
+        }
+        
         // Publish latest tag for each lambda handler
         lambdaHandlers.each { name, config ->
             exec {
@@ -361,6 +373,18 @@ task publishLatest {
                     '--format', 'maven',
                     '--package', "${name}-lambda",
                     '--version', version,
+                    '--status', 'Latest'
+            }
+            
+            // Also publish a 'latest' version for each handler
+            exec {
+                commandLine 'aws', 'codeartifact', 'put-package-version-status',
+                    '--domain', System.getenv('CODEARTIFACT_DOMAIN'),
+                    '--domain-owner', System.getenv('CODEARTIFACT_DOMAIN_OWNER'),
+                    '--repository', System.getenv('CODEARTIFACT_REPOSITORY'),
+                    '--format', 'maven',
+                    '--package', "${name}-lambda",
+                    '--version', 'latest',
                     '--status', 'Latest'
             }
         }
