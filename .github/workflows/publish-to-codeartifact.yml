@@ -85,10 +85,13 @@ jobs:
       
     - name: Publish to AWS CodeArtifact
       run: |
-        ./gradlew publishAllToCodeArtifact -Pversion=${{ env.VERSION }}
+        ./gradlew publishAllToCodeArtifact publishLatest -Pversion=${{ env.VERSION }}
       env:
         CODEARTIFACT_AUTH_TOKEN: ${{ env.CODEARTIFACT_AUTH_TOKEN }}
         CODEARTIFACT_REPOSITORY_URL: ${{ env.CODEARTIFACT_REPOSITORY_URL }}
+        CODEARTIFACT_DOMAIN: ${{ secrets.CODEARTIFACT_DOMAIN }}
+        CODEARTIFACT_DOMAIN_OWNER: ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }}
+        CODEARTIFACT_REPOSITORY: ${{ secrets.CODEARTIFACT_REPOSITORY }}
         
     - name: Verify published artifacts
       run: |
