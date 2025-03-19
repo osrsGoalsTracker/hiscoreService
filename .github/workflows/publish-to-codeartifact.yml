@@ -76,6 +76,7 @@ jobs:
           --domain-owner ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }} \
           --repository ${{ secrets.CODEARTIFACT_REPOSITORY }} \
           --format maven \
+          --namespace com.osrsGoalTracker \
           --package hiscore-service \
           --versions latest || true
 
@@ -85,6 +86,7 @@ jobs:
           --domain-owner ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }} \
           --repository ${{ secrets.CODEARTIFACT_REPOSITORY }} \
           --format maven \
+          --namespace com.osrsGoalTracker \
           --package getCharacterHiscores \
           --versions latest || true
         
