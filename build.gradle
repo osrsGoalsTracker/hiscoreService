@@ -307,11 +307,11 @@ publishing {
             def handlerTask = tasks.named("${name}Lambda").get()
             name = "${name}"
             "${name}Uberjar"(MavenPublication) {
-                artifactId = name
+                artifactId = "${name}-versioned"
                 artifact handlerTask
                 
                 pom {
-                    name = name
+                    name = "${name}-versioned"
                     description = config.description
                 }
             }

@@ -68,6 +68,26 @@ jobs:
           --output text)
         echo "CODEARTIFACT_REPOSITORY_URL=${CODEARTIFACT_REPOSITORY_URL}" >> $GITHUB_ENV
         
+    - name: Delete existing latest versions
+      run: |
+        # Delete latest version for hiscore-service
+        aws codeartifact delete-package-versions \
+          --domain ${{ secrets.CODEARTIFACT_DOMAIN }} \
+          --domain-owner ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }} \
+          --repository ${{ secrets.CODEARTIFACT_REPOSITORY }} \
+          --format maven \
+          --package hiscore-service \
+          --versions latest || true
+
+        # Delete latest version for getCharacterHiscores
+        aws codeartifact delete-package-versions \
+          --domain ${{ secrets.CODEARTIFACT_DOMAIN }} \
+          --domain-owner ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }} \
+          --repository ${{ secrets.CODEARTIFACT_REPOSITORY }} \
+          --format maven \
+          --package getCharacterHiscores \
+          --versions latest || true
+        
     - name: Set version if provided
       if: github.event.inputs.version != ''
       run: |
