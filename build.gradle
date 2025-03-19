@@ -305,15 +305,6 @@ publishing {
         // Create publications for each Lambda handler uberjar
         lambdaHandlers.each { name, config ->
             def handlerTask = tasks.named("${name}Lambda").get()
-            "${name}Uberjar"(MavenPublication) {
-                artifactId = "${name}-versioned"
-                artifact handlerTask
-                
-                pom {
-                    name = "${name}-versioned"
-                    description = config.description
-                }
-            }
             
             // Latest version publication for each handler
             "${name}LatestUberjar"(MavenPublication) {
