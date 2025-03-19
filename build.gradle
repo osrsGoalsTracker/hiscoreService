@@ -308,7 +308,7 @@ publishing {
             }
         }
     }
-    
+
     repositories {
         // Configure CodeArtifact repository for publishing
         if (System.getenv('CODEARTIFACT_REPOSITORY_URL') != null) {
