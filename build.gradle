@@ -295,7 +295,7 @@ publishing {
             "${name}Lambda"(MavenPublication) {
                 artifactId = "${name}-lambda"
                 artifact handlerTask
-                
+
                 pom {
                     name = "${name}-lambda"
                     description = config.description
