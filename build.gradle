@@ -279,17 +279,6 @@ task serviceJar(type: Jar) {
 // Configure publishing for the service JAR
 publishing {
     publications {
-        // Service uberjar publication
-        hiscoreServiceUberjar(MavenPublication) {
-            artifactId = 'hiscore-service-versioned'
-            artifact serviceJar
-            
-            pom {
-                name = 'hiscore-service'
-                description = 'Uberjar containing all dependencies for the hiscore service'
-            }
-        }
-
         // Latest version publication for service
         hiscoreServiceLatestUberjar(MavenPublication) {
             artifactId = 'hiscore-service'
@@ -305,26 +294,15 @@ publishing {
         // Create publications for each Lambda handler uberjar
         lambdaHandlers.each { name, config ->
             def handlerTask = tasks.named("${name}Lambda").get()
-            "${name}Uberjar"(MavenPublication) {
-                artifactId = "${name}-versioned"
-                artifact (handlerTask) {
-                    classifier = 'uberjar'
-                }
-                
-                pom {
-                    name = "${name}-versioned"
-                    description = config.description
-                }
-            }
             
             // Latest version publication for each handler
             "${name}LatestUberjar"(MavenPublication) {
-                artifactId = "${name}-latest"
+                artifactId = "${name}"
                 version = 'latest'
                 artifact handlerTask
                 
                 pom {
-                    name = "${name}-latest"
+                    name = "${name}"
                     description = config.description
                 }
             }
