@@ -61,7 +61,7 @@ public class GetCharacterHiscoresHandler
     public APIGatewayProxyResponseEvent handleRequest(
             final APIGatewayProxyRequestEvent input,
             final Context context) {
-        log.info("Received request to get character hiscores");
+        log.info("Received request to get character hiscores!");
         try {
             String characterName = parseAndValidateInput(input);
             CharacterHiscores hiscores = executeRequest(characterName);
