@@ -63,7 +63,8 @@ jobs:
     - name: Build and Publish
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        ./gradlew build publishArtifacts -Pversion=${{ env.VERSION }}
+        ./gradlew build publishArtifacts
       env:
         CODEARTIFACT_AUTH_TOKEN: ${{ env.CODEARTIFACT_AUTH_TOKEN }}
         CODEARTIFACT_REPOSITORY_URL: ${{ env.CODEARTIFACT_REPOSITORY_URL }}
+        VERSION: ${{ env.VERSION }}
