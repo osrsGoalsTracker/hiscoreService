@@ -358,7 +358,7 @@ task publishLatest {
                 '--version', version,
                 '--status', 'Latest'
         }
-        
+
         // Publish latest tag for each lambda handler
         lambdaHandlers.each { name, config ->
             exec {
