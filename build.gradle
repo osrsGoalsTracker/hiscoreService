@@ -318,12 +318,12 @@ publishing {
             
             // Latest version publication for each handler
             "${name}LatestUberjar"(MavenPublication) {
-                artifactId = name
+                artifactId = "${name}-latest"
                 version = 'latest'
                 artifact handlerTask
                 
                 pom {
-                    name = name
+                    name = "${name}-latest"
                     description = config.description
                 }
             }

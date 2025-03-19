@@ -112,29 +112,6 @@ jobs:
         CODEARTIFACT_DOMAIN: ${{ secrets.CODEARTIFACT_DOMAIN }}
         CODEARTIFACT_DOMAIN_OWNER: ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }}
         CODEARTIFACT_REPOSITORY: ${{ secrets.CODEARTIFACT_REPOSITORY }}
-        
-    - name: Verify published artifacts
-      run: |
-        # List all published artifacts
-        aws codeartifact list-package-versions \
-          --domain ${{ secrets.CODEARTIFACT_DOMAIN }} \
-          --domain-owner ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }} \
-          --repository ${{ secrets.CODEARTIFACT_REPOSITORY }} \
-          --package hiscore-service-uberjar \
-          --format maven \
-          --query "versions[*].version" \
-          --output text
-        
-        # List lambda handler uberjar artifacts
-        aws codeartifact list-package-versions \
-          --domain ${{ secrets.CODEARTIFACT_DOMAIN }} \
-          --domain-owner ${{ secrets.CODEARTIFACT_DOMAIN_OWNER }} \
-          --repository ${{ secrets.CODEARTIFACT_REPOSITORY }} \
-          --package getCharacterHiscores-lambda-uberjar \
-          --format maven \
-          --query "versions[*].version" \
-          --output text
-        
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4.6.1
       with:
