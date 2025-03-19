@@ -3,12 +3,11 @@ plugins {
     id 'io.freefair.lombok' version '8.4'
     id 'checkstyle'
     id 'jvm-test-suite'
-    id 'maven-publish'  // Add maven-publish plugin for publishing to CodeArtifact
+    id 'maven-publish'
 }
 
 group = 'com.osrsGoalTracker'
-// Use project property for version if provided, otherwise use default
-version = project.hasProperty('version') ? project.getProperty('version') : '1.0-SNAPSHOT'
+version = '1.0-SNAPSHOT'  // This will be overridden by the GitHub workflow
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -25,7 +24,7 @@ java {
 repositories {
     mavenCentral()
     mavenLocal()  // Check local Maven repository first
-    maven { url 'https://jitpack.io' }
+    maven { url = 'https://jitpack.io' }
     
     // Add CodeArtifact repository if credentials are available
     if (System.getenv('CODEARTIFACT_REPOSITORY_URL') != null) {
@@ -216,7 +215,6 @@ def lambdaHandlers = [
         handler: 'com.osrsGoalTracker.hiscore.handler.GetCharacterHiscoresHandler',
         description: 'Handler for retrieving player statistics from OSRS hiscores'
     ]
-    // New handlers will be automatically detected and published
 ]
 
 // Create tasks for each Lambda handler (uber/fat jars with all dependencies)
@@ -267,22 +265,20 @@ task serviceJar(type: Jar) {
     }
     
     from sourceSets.main.output
-    exclude '**/handler/**'  // Exclude handlers from the service JAR
+    exclude '**/handler/**'
     
-    // Include all dependencies to make it a fat/uber jar
     dependsOn configurations.runtimeClasspath
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
 
-// Configure publishing for the service JAR
+// Configure publishing
 publishing {
     publications {
-        // Latest version publication for service
-        hiscoreServiceLatestUberjar(MavenPublication) {
+        // Service JAR publication
+        hiscoreService(MavenPublication) {
             artifactId = 'hiscore-service'
-            version = 'latest'
             artifact serviceJar
             
             pom {
@@ -292,18 +288,16 @@ publishing {
             }
         }
         
-        // Create publications for each Lambda handler uberjar
+        // Lambda handler publications
         lambdaHandlers.each { name, config ->
             def handlerTask = tasks.named("${name}Lambda").get()
             
-            // Latest version publication for each handler
-            "${name}LatestUberjar"(MavenPublication) {
-                artifactId = "${name}"
-                version = 'latest'
+            "${name}Lambda"(MavenPublication) {
+                artifactId = "${name}-lambda"
                 artifact handlerTask
                 
                 pom {
-                    name = "${name}"
+                    name = "${name}-lambda"
                     description = config.description
                     groupId = 'com.osrsGoalTracker'
                 }
@@ -312,7 +306,6 @@ publishing {
     }
 
     repositories {
-        // Configure CodeArtifact repository for publishing
         if (System.getenv('CODEARTIFACT_REPOSITORY_URL') != null) {
             maven {
                 name = 'CodeArtifact'
@@ -326,87 +319,14 @@ publishing {
     }
 }
 
-// Task to publish all artifacts to CodeArtifact
-task publishAllToCodeArtifact {
+// Task to publish all artifacts
+task publishArtifacts {
     description = 'Publishes all artifacts to AWS CodeArtifact'
     group = 'publishing'
-    
-    // Depend on all publish tasks
     dependsOn tasks.withType(PublishToMavenRepository).matching { 
         it.repository == publishing.repositories.findByName('CodeArtifact') 
     }
 }
 
-// Task to publish latest tag
-task publishLatest {
-    description = 'Publishes artifacts with latest tag to AWS CodeArtifact'
-    group = 'publishing'
-    
-    doLast {
-        def version = project.version
-        def group = project.group
-        
-        // Publish latest tag for service
-        exec {
-            commandLine 'aws', 'codeartifact', 'put-package-version-status',
-                '--domain', System.getenv('CODEARTIFACT_DOMAIN'),
-                '--domain-owner', System.getenv('CODEARTIFACT_DOMAIN_OWNER'),
-                '--repository', System.getenv('CODEARTIFACT_REPOSITORY'),
-                '--format', 'maven',
-                '--namespace', 'com.osrsGoalTracker',
-                '--package', 'hiscore-service',
-                '--version', version,
-                '--status', 'Latest'
-        }
-
-        // Publish latest tag for each lambda handler
-        lambdaHandlers.each { name, config ->
-            exec {
-                commandLine 'aws', 'codeartifact', 'put-package-version-status',
-                    '--domain', System.getenv('CODEARTIFACT_DOMAIN'),
-                    '--domain-owner', System.getenv('CODEARTIFACT_DOMAIN_OWNER'),
-                    '--repository', System.getenv('CODEARTIFACT_REPOSITORY'),
-                    '--format', 'maven',
-                    '--namespace', 'com.osrsGoalTracker',
-                    '--package', "${name}-lambda",
-                    '--version', version,
-                    '--status', 'Latest'
-            }
-        }
-    }
-}
-
-// Make publishLatest depend on publishAllToCodeArtifact
-publishLatest.dependsOn publishAllToCodeArtifact
-
-// Automatically detect new handlers in the handler package
-task detectHandlers {
-    description = 'Detects new handlers in the handler package'
-    group = 'build'
-    
-    doLast {
-        def handlerDir = new File("${projectDir}/src/main/java/com/osrsGoalTracker/hiscore/handler")
-        if (handlerDir.exists()) {
-            handlerDir.eachFile { file ->
-                if (file.name.endsWith('Handler.java')) {
-                    def handlerName = file.name.replace('Handler.java', '')
-                    def camelCaseName = handlerName[0].toLowerCase() + handlerName.substring(1)
-                    
-                    if (!lambdaHandlers.containsKey(camelCaseName)) {
-                        println "Detected new handler: ${handlerName}"
-                        lambdaHandlers[camelCaseName] = [
-                            handler: "com.osrsGoalTracker.hiscore.handler.${handlerName}",
-                            description: "Handler for ${camelCaseName}"
-                        ]
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Make sure detectHandlers runs before buildAllHandlers
-buildAllHandlers.dependsOn detectHandlers
-
-// Make sure the build task depends on buildAllHandlers and serviceJar
+// Make the build task depend on buildAllHandlers and serviceJar
 build.dependsOn buildAllHandlers, serviceJar
